@@ -81,8 +81,10 @@ describe('stateFromElement', () => {
     let element = new ElementNode('sup', [], [textNode]);
     let wrapperElement = new ElementNode('div', [], [element]);
     let options = {
-      elementStyles: {
-        sup: 'SUPERSCRIPT',
+      elementStyles(tagName) {
+        if (tagName === 'sup') {
+          return 'SUPERSCRIPT';
+        }
       },
     };
     let contentState = stateFromElement(wrapperElement, options);

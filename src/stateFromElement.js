@@ -47,7 +47,7 @@ type ParsedBlock = {
   data: ?BlockData;
 };
 
-type ElementStyles = {[tagName: string]: Style};
+type ElementStyles = (tagName: string, element: DOMElement) => ?string;
 
 type Options = {
   elementStyles?: ElementStyles;
@@ -300,7 +300,7 @@ class BlockGenerator {
     let block = this.blockStack.slice(-1)[0];
     let style = block.styleStack.slice(-1)[0];
     let entityKey = block.entityStack.slice(-1)[0];
-    style = addStyleFromTagName(style, tagName, this.options.elementStyles);
+    style = addStyleFromTagName(style, tagName, element, this.options.elementStyles);
     if (ELEM_TO_ENTITY.hasOwnProperty(tagName)) {
       // If the to-entity function returns nothing, use the existing entity.
       entityKey = ELEM_TO_ENTITY[tagName](tagName, element) || entityKey;
@@ -432,7 +432,7 @@ function concatFragments(fragments: Array<TextFragment>): TextFragment {
 }
 
 
-function addStyleFromTagName(styleSet: StyleSet, tagName: string, elementStyles?: ElementStyles): StyleSet {
+function addStyleFromTagName(styleSet: StyleSet, tagName: string, element: DOMElement, elementStyles?: ElementStyles): StyleSet {
   switch (tagName) {
     case 'b':
     case 'strong': {
@@ -453,8 +453,11 @@ function addStyleFromTagName(styleSet: StyleSet, tagName: string, elementStyles?
     }
     default: {
       // Allow custom styles to be provided.
-      if (elementStyles && elementStyles[tagName]) {
-        return styleSet.add(elementStyles[tagName]);
+      if (elementStyles) {
+        const style = elementStyles(tagName, element);
+        if (style) {
+          return styleSet.add(style);
+        }
       }
 
       return styleSet;
